@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHUTAPALAVRAS</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="startScreen">
+        <!-- O conteúdo da tela inicial permanece o mesmo -->
+        <div class="dialog-v2-2">
+            <div class="title-3">
+                <p class="text-4">CHUTAPALAVRAS</p>
+                <p class="text-5">Entre em uma sala criada ou crie uma nova sala para jogar.</p>
+            </div>
+            <div class="content-18">
+                <p class="section-title">Entrar em uma sala</p>
+                <div class="text-field-v2-8">
+                    <div class="input-9">
+                        <div class="icon-10"><img src="images/vector-11.svg" alt="ícone de usuário" /></div>
+                        <input type="text" id="joinNicknameInput" placeholder="Seu nome de jogador">
+                    </div>
+                </div>
+                <p id="joinNicknameError" class="helper-text-error"></p>
+                <div class="text-field-v2-20">
+                     <div class="input-9">
+                        <div class="icon-22"><img src="images/vector-23.svg" alt="ícone de sala" /></div>
+                        <input type="text" id="roomIdInput" placeholder="Código da sala (Ex: A123)" maxlength="4">
+                    </div>
+                </div>
+                <p id="joinRoomIdError" class="helper-text-error"></p>
+                <button id="joinRoomBtn" class="button-contained-25"><span class="text-14 text-white">Entrar na sala</span></button>
+            </div>
+            <div class="content-15"><div class="divider-horizontal-16"></div></div>
+            <div class="content-6">
+                <p class="section-title">Criar uma sala</p>
+                <div class="text-field-v2-8">
+                    <div class="input-9">
+                        <div class="icon-10"><img src="images/vector-11.svg" alt="ícone de usuário" /></div>
+                        <input type="text" id="createNicknameInput" placeholder="Seu nome de jogador">
+                    </div>
+                </div>
+                <p id="createNicknameError" class="helper-text-error"></p>
+                <button id="createRoomBtn" class="button-contained-13"><span class="text-14 text-white">Criar sala</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="roomScreen" class="dialog-v2-2 hidden">
+        <!-- O conteúdo da sala de espera permanece o mesmo -->
+         <div class="title-3">
+            <p class="text-4">Sala de Espera</p>
+            <p class="text-5" id="lobbySubtitle">Aguardando jogadores...</p>
+        </div>
+        <div id="roomCodeSection" class="lobby-section code-section">
+            <p class="section-title">Código da sala</p>
+            <p class="code-display" id="roomCodeDisplay">XXXX</p>
+            <button id="copyCodeBtn" class="button-outlined"><span>Copiar código</span></button>
+        </div>
+        <div id="divider1" class="content-15"><div class="divider-horizontal-16"></div></div>
+        <div id="mainLobbySection" class="lobby-section">
+            <div id="hostSetupSection" class="hidden">
+                <p class="section-title">Palavras por jogador</p>
+                <div class="stepper-control">
+                    <button id="minusBtn" class="stepper-btn"><img src="images/icon-17.svg" alt="subtrair"></button>
+                    <p class="code-display" id="wordCountDisplay">5</p>
+                    <button id="plusBtn" class="stepper-btn"><img src="images/icon-14.svg" alt="adicionar"></button>
+                </div>
+                <button id="setWordsBtn" class="button-contained-13" style="margin-top: 16px;"><span class="text-14 text-white">Definir</span></button>
+            </div>
+            <div id="wordSubmissionSection" class="hidden">
+                <p class="section-title">Palavras do jogo</p>
+                <div class="text-field-v2-8">
+                    <div class="input-9"><input type="text" id="wordInput" placeholder="Envie uma palavra"></div>
+                </div>
+                <p id="wordSubmissionError" class="helper-text-error"></p>
+                <button id="submitWordBtn" class="button-contained-13"><span class="text-14 text-white">Enviar (1/X)</span></button>
+                <p id="submissionStatus" class="submission-status-text hidden"></p>
+            </div>
+            <div id="wordsSubmittedSection" class="hidden">
+                <p class="section-title">Palavras do jogo</p>
+                <p class="text-5" style="text-align: center; margin-top: 8px;">Você já enviou suas palavras! Aguarde os outros jogadores.</p>
+            </div>
+            <div id="waitingForHostSection" class="hidden">
+                <p class="section-title">Palavras do jogo</p>
+                <p class="text-5" style="text-align: center; margin-top: 8px;" id="waitingForHostMessage">Aguardando o anfitrião definir o número de palavras...</p>
+            </div>
+        </div>
+        <div id="gamePrepAreaContainer" class="lobby-section hidden">
+            <div id="gamePrepArea">
+                <p class="section-title">Palavras do jogo</p>
+                <p class="text-5" style="text-align:center; margin-top: 2px;">Tudo pronto! Hora de sortear as duplas</p>
+                <button id="drawTeamsBtn" class="button-contained-13" style="margin-top: 8px;"><span class="text-14 text-white">Sortear duplas</span></button>
+            </div>
+        </div>
+        <div id="teamsDisplaySection" class="hidden lobby-section">
+            <p class="section-title">Duplas sorteadas</p>
+            <div id="teamsList" class="teams-list-container"></div>
+                        <div class="lobby-section" style="margin-top: 24px; padding: 0;">
+                <p class="section-title">A seguir</p>
+                <div class="player-roles-container">
+                    <div class="player-role-box">
+                        <div class="role-header">Descreve:</div>
+                        <div class="role-name" id="nextDescriber">--</div>
+                    </div>
+                    <div class="player-role-box">
+                        <div class="role-header">Adivinha:</div>
+                        <div class="role-name" id="nextGuesser">--</div>
+                    </div>
+                </div>
+            </div>
+            <button id="startGameBtn" class="button-contained-13" style="margin-top: 16px;"><span class="text-14 text-white">Iniciar Jogo (1º Turno)</span></button>
+        </div>
+        <div id="divider2" class="content-15"><div class="divider-horizontal-16"></div></div>
+        <div id="playerListSection" class="lobby-section">
+            <p class="section-title">Jogadores na sala</p>
+            <div id="playerList" class="player-list-container"></div>
+        </div>
+    </div>
+
+    <div id="gameArea" class="dialog-v2-2 hidden">
+        <!-- Visão principal do turno -->
+        <div id="turnView">
+            <div class="title-3">
+                <p class="text-4" id="gameStageTitle">Etapa 1: Descrição</p>
+                <p class="text-5" id="gameStageSubtitle">Descreva a palavra sorteada para sua dupla.</p>
+            </div>
+            <div class="player-roles-container">
+                <div class="player-role-box">
+                    <div class="role-header">Descreve:</div>
+                    <div class="role-name" id="describerName">Nome A</div>
+                </div>
+                <div class="player-role-box">
+                    <div class="role-header">Adivinha:</div>
+                    <div class="role-name" id="guesserName">Nome B</div>
+                </div>
+            </div>
+            <div class="game-content-area">
+                <p class="section-title">Palavra sorteada</p>
+                <p class="word-display" id="currentWordDisplay">Palavra A</p>
+            </div>
+            <div class="game-content-area">
+                <p class="section-title">Tempo restante</p>
+                <p class="timer-display" id="timerDisplay">60s</p>
+            </div>
+                        <div id="gameButtonsContainer" class="game-buttons-container">
+                <button id="guessCorrectBtn" class="button-contained-13"><span>Acerto</span></button>
+                <button id="endTurnBtn" class="button-outlined"><span>Encerrar turno</span></button>
+            </div>
+        </div>
+
+        <!-- Visão de resumo do fim de turno -->
+        <div id="turnSummaryView" class="turn-summary-view hidden">
+            <div class="title-3">
+                <p class="text-4">Fim do Turno!</p>
+            </div>
+                        <div class="game-content-area" style="width: 100%; padding: 0 32px;">
+                <p class="section-title">A seguir:</p>
+                <div class="player-roles-container" style="padding: 0;">
+                    <div class="player-role-box">
+                        <div class="role-header">Descreve:</div>
+                        <div class="role-name" id="summaryNextDescriber">--</div>
+                    </div>
+                    <div class="player-role-box">
+                        <div class="role-header">Adivinha:</div>
+                        <div class="role-name" id="summaryNextGuesser">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="game-buttons-container">
+                <button id="confirmNextTurnBtn" class="button-contained-13 hidden"><span>Iniciar Próximo Turno</span></button>
+            </div>
+        </div>
+            <!-- EM index.html, adicione isto dentro de #gameArea -->
+
+            <!-- Visão de resumo do fim de etapa -->
+            <div id="stageSummaryView" class="turn-summary-view hidden">
+                <div class="title-3">
+                    <p class="text-4" id="stageSummaryTitle">Fim da Etapa 1!</p>
+                    <p class="text-5">Todas as palavras foram adivinhadas. Vejam o placar!</p>
+                </div>
+                <div class="game-content-area">
+                    <p class="section-title">Placar Final da Etapa</p>
+                    <div id="stageScoreSummary" class="score-summary-container">
+                        <!-- Scores serão populados aqui via JS -->
+                    </div>
+                </div>
+                <div class="game-buttons-container">
+                    <button id="startNextStageBtn" class="button-contained-13 hidden"><span>Iniciar Próxima Etapa</span></button>
+                </div>
+            </div>
+
+            <div id="gameOverView" class="turn-summary-view hidden">
+                <canvas id="confetti-canvas"></canvas>
+                <div class="title-3">
+                    <p class="text-4">Fim de Jogo!</p>
+                    <p class="text-5" id="winner-announcement"></p>
+                </div>
+                <div class="game-content-area">
+                    <p class="section-title">Placar Final</p>
+                    <div id="finalScoreSummary" class="score-summary-container">
+                        <!-- O placar final será preenchido aqui -->
+                    </div>
+                </div>
+                <div class="game-buttons-container">
+                    <button id="playAgainBtn" class="button-contained-13"><span>Jogar Novamente</span></button>
+                </div>
+            </div>
+    
+    </div>
+
+
+    <div id="customAlert" class="custom-alert-overlay hidden">
+        <div class="custom-alert-box">
+            <h2 id="customAlertTitle"></h2>
+            <p id="customAlertMessage"></p>
+            <button id="customAlertCloseBtn" class="button-contained-13"><span class="text-14 text-white">Entendi</span></button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const socket = io();
+        
+        // --- Seletores Globais ---
+        const startScreen = document.getElementById('startScreen');
+        const roomScreen = document.getElementById('roomScreen');
+        const gameArea = document.getElementById('gameArea');
+        const createNicknameInput = document.getElementById('createNicknameInput');
+        const createRoomBtn = document.getElementById('createRoomBtn');
+        const createNicknameError = document.getElementById('createNicknameError');
+        const joinNicknameInput = document.getElementById('joinNicknameInput');
+        const roomIdInput = document.getElementById('roomIdInput');
+        const joinRoomBtn = document.getElementById('joinRoomBtn');
+        const joinNicknameError = document.getElementById('joinNicknameError');
+        const joinRoomIdError = document.getElementById('joinRoomIdError');
+        const customAlert = document.getElementById('customAlert');
+        const customAlertCloseBtn = document.getElementById('customAlertCloseBtn');
+        const customAlertTitle = document.getElementById('customAlertTitle');
+        const customAlertMessage = document.getElementById('customAlertMessage');
+        const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const playerList = document.getElementById('playerList');
+        const lobbySubtitle = document.getElementById('lobbySubtitle');
+        const hostSetupSection = document.getElementById('hostSetupSection');
+        const minusBtn = document.getElementById('minusBtn');
+        const plusBtn = document.getElementById('plusBtn');
+        const wordCountDisplay = document.getElementById('wordCountDisplay');
+        const setWordsBtn = document.getElementById('setWordsBtn');
+        const wordSubmissionSection = document.getElementById('wordSubmissionSection');
+        const submissionStatus = document.getElementById('submissionStatus');
+        const wordInput = document.getElementById('wordInput');
+        const submitWordBtn = document.getElementById('submitWordBtn');
+        const wordSubmissionError = document.getElementById('wordSubmissionError');
+        const wordsSubmittedSection = document.getElementById('wordsSubmittedSection');
+        const waitingForHostSection = document.getElementById('waitingForHostSection');
+        const waitingForHostMessage = document.getElementById('waitingForHostMessage');
+        const gamePrepAreaContainer = document.getElementById('gamePrepAreaContainer');
+        const drawTeamsBtn = document.getElementById('drawTeamsBtn');
+        const teamsDisplaySection = document.getElementById('teamsDisplaySection');
+        const teamsList = document.getElementById('teamsList');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const mainLobbySection = document.getElementById('mainLobbySection');
+        const playerListSection = document.getElementById('playerListSection');
+        const roomCodeSection = document.getElementById('roomCodeSection');
+        const divider1 = document.getElementById('divider1');
+        const divider2 = document.getElementById('divider2');
+
+        // --- Seletores da Tela de Jogo ---
+        const turnView = document.getElementById('turnView');
+        const gameStageTitle = document.getElementById('gameStageTitle');
+        const gameStageSubtitle = document.getElementById('gameStageSubtitle');
+        const describerName = document.getElementById('describerName');
+        const guesserName = document.getElementById('guesserName');
+        const currentWordDisplay = document.getElementById('currentWordDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const guessCorrectBtn = document.getElementById('guessCorrectBtn');
+        const endTurnBtn = document.getElementById('endTurnBtn');
+
+        // --- Seletores da Tela de Resumo ---
+        const turnSummaryView = document.getElementById('turnSummaryView');
+        const scoreSummary = document.getElementById('scoreSummary');
+        const nextTeamText = document.getElementById('nextTeamText');
+        const confirmNextTurnBtn = document.getElementById('confirmNextTurnBtn');
+
+        // --- Seletores da Tela de Resumo de Etapa ---
+        const stageSummaryView = document.getElementById('stageSummaryView');
+        const stageSummaryTitle = document.getElementById('stageSummaryTitle');
+        const stageScoreSummary = document.getElementById('stageScoreSummary');
+        const startNextStageBtn = document.getElementById('startNextStageBtn');
+
+                    // --- Seletores da Tela de Fim de Jogo ---
+            const gameOverView = document.getElementById('gameOverView');
+            const winnerAnnouncement = document.getElementById('winner-announcement');
+            const finalScoreSummary = document.getElementById('finalScoreSummary');
+            const playAgainBtn = document.getElementById('playAgainBtn');
+            const confettiCanvas = document.getElementById('confetti-canvas');
+
+        // --- Variáveis de Estado ---
+        let myNickname = '', myRoomId = '', isHost = false, wordsToSubmit = 5;
+        let turnTimer = null;
+
+        // --- Funções Auxiliares ---
+        function showScreen(screenId) {
+            startScreen.classList.add('hidden');
+            roomScreen.classList.add('hidden');
+            gameArea.classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.add('visible');
+        }
+        function clearErrors() {
+            createNicknameError.classList.remove('visible');
+            joinNicknameError.classList.remove('visible');
+            joinRoomIdError.classList.remove('visible');
+            wordSubmissionError.classList.remove('visible');
+        }
+
+        // --- Lógica dos Botões ---
+        createRoomBtn.addEventListener('click', () => {
+            clearErrors(); myNickname = createNicknameInput.value.trim();
+            if (myNickname.length < 3) { showError(createNicknameError, 'O nome de jogador deve ter no mínimo 3 caracteres.'); return; }
+            socket.emit('createRoom', { nickname: myNickname });
+        });
+        joinRoomBtn.addEventListener('click', () => {
+            clearErrors(); let hasError = false; 
+            myNickname = joinNicknameInput.value.trim(); myRoomId = roomIdInput.value.trim().toUpperCase();
+            if (myNickname.length < 3) { showError(joinNicknameError, 'O nome de jogador deve ter no mínimo 3 caracteres.'); hasError = true; }
+            const idRegex = /^[A-Z]\d{3}$/;
+            if (!idRegex.test(myRoomId)) { showError(joinRoomIdError, 'Código da Sala inválido. O formato é 1 letra seguida de 3 números (Ex: A123).'); hasError = true; }
+            if (hasError) { return; }
+            socket.emit('joinRoom', { nickname: myNickname, roomId: myRoomId });
+        });
+        customAlertCloseBtn.addEventListener('click', () => { customAlert.classList.add('hidden'); });
+        copyCodeBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(myRoomId).then(() => {
+                copyCodeBtn.querySelector('span').textContent = 'Copiado!';
+                setTimeout(() => { copyCodeBtn.querySelector('span').textContent = 'Copiar código'; }, 2000);
+            });
+        });
+        minusBtn.addEventListener('click', () => {
+            let count = parseInt(wordCountDisplay.textContent);
+            if (count > 1) { count--; wordCountDisplay.textContent = count; }
+        });
+        plusBtn.addEventListener('click', () => {
+            let count = parseInt(wordCountDisplay.textContent);
+            if (count < 10) { count++; wordCountDisplay.textContent = count; }
+        });
+        setWordsBtn.addEventListener('click', () => {
+            wordsToSubmit = parseInt(wordCountDisplay.textContent);
+            roomScreen.classList.add('guest-view');
+            socket.emit('setWordsPerPlayer', { roomId: myRoomId, wordsPerPlayer: wordsToSubmit });
+        });
+        submitWordBtn.addEventListener('click', () => {
+            const word = wordInput.value.trim();
+            if (word) {
+                clearErrors(); socket.emit('submitWord', { roomId: myRoomId, word: word, nickname: myNickname });
+                wordInput.value = ''; wordInput.focus();
+            }
+        });
+        if(drawTeamsBtn) {
+            drawTeamsBtn.addEventListener('click', () => {
+                drawTeamsBtn.disabled = true; socket.emit('createTeamsAndStart', { roomId: myRoomId });
+            });
+        }
+        if(startGameBtn) {
+            startGameBtn.addEventListener('click', () => {
+                startGameBtn.disabled = true; socket.emit('startGame', { roomId: myRoomId });
+            });
+        }
+        
+        guessCorrectBtn.addEventListener('click', () => {
+            socket.emit('wordGuessed', { roomId: myRoomId, timeLeft: parseInt(timerDisplay.textContent) });
+        });
+        
+        endTurnBtn.addEventListener('click', () => {
+            if (turnTimer) clearInterval(turnTimer);
+            socket.emit('turnEnded', { roomId: myRoomId });
+        });
+
+                confirmNextTurnBtn.addEventListener('click', () => {
+            // Esconde a tela de resumo ANTES de pedir o próximo turno
+            turnSummaryView.classList.add('hidden');
+            
+            // Esconde o próprio botão para evitar cliques duplos
+            confirmNextTurnBtn.classList.add('hidden');
+            
+            // Pede ao servidor para iniciar o próximo turno
+            socket.emit('confirmStartTurn', { roomId: myRoomId });
+        });
+
+        startNextStageBtn.addEventListener('click', () => {
+                socket.emit('confirmStartTurn', { roomId: myRoomId });
+            });
+
+            playAgainBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+
+                // EM index.html, no <script>, adicione este listener e as funções de confetes
+
+            // EM index.html, no <script>, substitua o listener 'gameOver' por este:
+
+            socket.on('gameOver', (data) => {
+                // Garante que a tela de jogo correta é exibida
+                showScreen('gameArea');
+                turnView.classList.add('hidden');
+                turnSummaryView.classList.add('hidden');
+                stageSummaryView.classList.add('hidden');
+                gameOverView.classList.remove('hidden');
+
+                let maxScore = -1;
+                let winners = [];
+
+                // Encontra a maior pontuação
+                Object.values(data.scores).forEach(score => {
+                    if (score > maxScore) {
+                        maxScore = score;
+                    }
+                });
+
+                // Encontra todas as equipes com a maior pontuação (para empates)
+                for (const teamName in data.scores) {
+                    if (data.scores[teamName] === maxScore) {
+                        winners.push(teamName);
+                    }
+                }
+
+                // Ordena o placar da maior para a menor pontuação
+                const sortedScores = Object.entries(data.scores).sort(([,a],[,b]) => b-a);
+
+                // Preenche o placar final
+                finalScoreSummary.innerHTML = '';
+                for (const [teamName, score] of sortedScores) {
+                    const scoreItem = document.createElement('div');
+                    scoreItem.className = 'score-item';
+                    if (winners.includes(teamName)) {
+                        scoreItem.classList.add('winner');
+                    }
+                    scoreItem.innerHTML = `<span>${teamName}</span><span>${score} Pontos</span>`;
+                    finalScoreSummary.appendChild(scoreItem);
+                }
+
+                // Anuncia o(s) vencedor(es)
+                if (winners.length > 1) {
+                    winnerAnnouncement.textContent = 'Temos um empate!';
+                } else {
+                    winnerAnnouncement.textContent = `A dupla "${winners[0]}" é a vencedora!`;
+                }
+                
+                // Inicia a animação de confetes
+                startConfetti();
+
+                // --- MODIFICAÇÃO: Para os confetes após 7 segundos ---
+                setTimeout(() => {
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        // Limpa o canvas para remover os confetes que já estão na tela
+                        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                    }
+                }, 4500); // 5000 milissegundos = 5 segundos
+            });
+
+
+            // --- LÓGICA DOS CONFETES ---
+            const confettiCtx = confettiCanvas.getContext('2d');
+            let confettiParticles = [];
+            let animationFrameId;
+
+            function createParticle(width, height) {
+                return {
+                    x: Math.random() * width,
+                    y: -20 - Math.random() * height,
+                    w: 10,
+                    h: 20,
+                    color: ['#f7d44c', '#f5c423', '#B23BAC', '#7C49CB', '#694ED6', '#FFFFFF'][Math.floor(Math.random() * 6)],
+                    rotation: Math.random() * 360,
+                    speed: Math.random() * 3 + 2,
+                    rotationSpeed: Math.random() * 10 - 5
+                };
+            }
+
+            function startConfetti() {
+                const parent = confettiCanvas.parentElement;
+                if (!parent) return;
+                confettiCanvas.width = parent.offsetWidth;
+                confettiCanvas.height = parent.offsetHeight;
+                
+                confettiParticles = [];
+                const particleCount = 200;
+
+                for (let i = 0; i < particleCount; i++) {
+                    confettiParticles.push(createParticle(confettiCanvas.width, confettiCanvas.height));
+                }
+                
+                if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                animateConfetti();
+            }
+
+            function animateConfetti() {
+                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                
+                confettiParticles.forEach((p, index) => {
+                    p.y += p.speed;
+                    p.rotation += p.rotationSpeed;
+                    
+                    confettiCtx.save();
+                    confettiCtx.translate(p.x + p.w / 2, p.y + p.h / 2);
+                    confettiCtx.rotate(p.rotation * Math.PI / 180);
+                    confettiCtx.fillStyle = p.color;
+                    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    confettiCtx.restore();
+
+                    if (p.y > confettiCanvas.height) {
+                        confettiParticles[index] = createParticle(confettiCanvas.width, confettiCanvas.height);
+                        confettiParticles[index].y = -20;
+                    }
+                });
+
+                animationFrameId = requestAnimationFrame(animateConfetti);
+            }
+    
+
+        // --- Listeners de Eventos do Servidor ---
+        socket.on('roomCreated', (data) => {
+            myNickname = data.nickname; myRoomId = data.roomId; isHost = true;
+            showScreen('roomScreen'); roomCodeDisplay.textContent = myRoomId;
+            roomScreen.classList.remove('guest-view');
+            waitingForHostSection.classList.add('hidden'); hostSetupSection.classList.remove('hidden');
+        });
+        socket.on('roomJoined', (data) => {
+            myNickname = data.nickname; myRoomId = data.roomId; isHost = false;
+            showScreen('roomScreen'); roomCodeDisplay.textContent = myRoomId;
+            roomScreen.classList.add('guest-view');
+            waitingForHostSection.classList.remove('hidden');
+        });
+        socket.on('roomNotFound', () => {
+            customAlertTitle.textContent = 'Sala não encontrada';
+            customAlertMessage.textContent = 'Não encontramos uma sala com o código informado, por favor verifique.';
+            customAlert.classList.remove('hidden');
+        });
+        socket.on('nicknameError', (message) => {
+            customAlertTitle.textContent = 'Erro de Apelido'; customAlertMessage.textContent = message; customAlert.classList.remove('hidden');
+        });
+        socket.on('playersUpdate', (players) => {
+            playerList.innerHTML = '';
+            players.forEach(player => {
+                const playerItem = document.createElement('div'); playerItem.className = 'player-item';
+                const iconSrc = player.isHost ? 'images/vector-25.svg' : 'images/vector-11.svg';
+                playerItem.innerHTML = `<img src="${iconSrc}" alt="ícone jogador"><span>${player.nickname}</span>`;
+                playerList.appendChild(playerItem);
+            });
+        });
+        socket.on('wordsPerPlayerSet', (data) => {
+            wordsToSubmit = data.wordsPerPlayer;
+            hostSetupSection.classList.add('hidden'); waitingForHostSection.classList.add('hidden');
+            wordSubmissionSection.classList.remove('hidden');
+            submitWordBtn.querySelector('span').textContent = `Enviar (1/${wordsToSubmit})`;
+        });
+        socket.on('wordSubmittedIndividual', (data) => {
+            wordSubmissionError.classList.remove('visible');
+            if (data.wordsSubmittedByMe >= data.totalWordsForPlayer) {
+                wordSubmissionSection.classList.add('hidden'); wordsSubmittedSection.classList.remove('hidden');
+            } else {
+                submissionStatus.classList.remove('hidden');
+                submissionStatus.textContent = `Você enviou ${data.wordsSubmittedByMe} de ${data.totalWordsForPlayer} palavras.`;
+                const nextWordNumber = data.wordsSubmittedByMe + 1;
+                submitWordBtn.querySelector('span').textContent = `Enviar (${nextWordNumber}/${data.totalWordsForPlayer})`;
+            }
+        });
+        socket.on('wordSubmissionError', (message) => {
+            submissionStatus.classList.add('hidden'); showError(wordSubmissionError, message);
+        });
+        socket.on('allWordsSubmittedAndReady', () => {
+            wordSubmissionSection.classList.add('hidden'); wordsSubmittedSection.classList.add('hidden');
+            if (isHost) { gamePrepAreaContainer.classList.remove('hidden'); }
+            else {
+                waitingForHostMessage.textContent = 'Todas as palavras foram enviadas! Aguardando o anfitrião sortear as duplas...';
+                waitingForHostSection.classList.remove('hidden');
+            }
+        });
+
+        socket.on('teamsFormedAndReady', (data) => {
+            mainLobbySection.classList.add('hidden'); 
+            gamePrepAreaContainer.classList.add('hidden');
+            roomCodeSection.classList.add('hidden'); 
+            playerListSection.classList.add('hidden');
+            divider1.classList.add('hidden'); 
+            divider2.classList.add('hidden');
+            
+            teamsDisplaySection.classList.remove('hidden');
+            teamsList.innerHTML = '';
+            data.teams.forEach(team => {
+                const teamItem = document.createElement('div'); 
+                teamItem.className = 'team-item'; 
+                teamItem.textContent = team.name; 
+                teamsList.appendChild(teamItem);
+            });
+            
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            document.getElementById('nextDescriber').textContent = data.nextDescriber;
+            document.getElementById('nextGuesser').textContent = data.nextGuesser;
+            // --- FIM DA MODIFICAÇÃO ---
+
+            lobbySubtitle.textContent = 'Duplas sorteadas! Preparem-se para o início do jogo.';
+            
+            // Oculta o botão por defeito, ele será mostrado pelo evento turnEndedSuccess ou prepareNextStage
+            if (isHost) { 
+                startGameBtn.classList.remove('hidden'); 
+            } else { 
+                startGameBtn.classList.add('hidden'); 
+            }
+        });
+
+        socket.on('startTurn', (data) => {
+            // 1. Garante que apenas a área de jogo principal está visível
+            showScreen('gameArea');
+            // 2. Esconde explicitamente todas as "sub-telas" dentro da área de jogo
+            turnSummaryView.classList.add('hidden');
+            stageSummaryView.classList.add('hidden');
+            // 3. Mostra APENAS a tela do turno atual
+            turnView.classList.remove('hidden');
+
+            // Limpa qualquer temporizador anterior
+            if (turnTimer) clearInterval(turnTimer);
+
+            // Preenche os títulos e subtítulos
+            const stageTitles = { 1: 'Etapa 1: Descrição', 2: 'Etapa 2: Uma Palavra', 3: 'Etapa 3: Mímica' };
+            const stageSubtitles = { 1: 'Descreva a palavra sorteada para sua dupla.', 2: 'Diga apenas UMA palavra como dica.', 3: 'Faça mímicas para sua dupla adivinhar.' };
+            gameStageTitle.textContent = stageTitles[data.stage] || `Etapa ${data.stage}`;
+            gameStageSubtitle.textContent = stageSubtitles[data.stage] || 'Adivinhe a palavra!';
+
+            // Preenche os nomes e a palavra
+            describerName.textContent = data.describer; 
+            guesserName.textContent = data.guesser;
+            currentWordDisplay.textContent = data.currentWord;
+            
+            // --- CORREÇÃO DA VISIBILIDADE DOS BOTÕES ---
+            const gameButtons = document.getElementById('gameButtonsContainer');
+            // O anfitrião OU o descritor da vez podem ver e usar os botões de jogo
+            if (isHost || socket.id === data.describerId) {
+                gameButtons.classList.remove('hidden');
+            } else {
+                gameButtons.classList.add('hidden');
+            }
+            
+            // Inicia o temporizador
+            let timeLeft = data.turnDuration;
+            timerDisplay.textContent = `${timeLeft}s`;
+            turnTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(turnTimer);
+                    // Apenas o descritor pode encerrar o turno automaticamente
+                    if (socket.id === data.describerId) endTurnBtn.click();
+                }
+            }, 1000);
+        });
+
+
+
+        socket.on('wordGuessedSuccess', (data) => {
+            if (data.canGuessMore) {
+                currentWordDisplay.textContent = data.nextWord;
+            }
+        });
+
+        socket.on('turnEndedSuccess', (data) => {
+            turnView.classList.add('hidden');
+            turnSummaryView.classList.remove('hidden');
+            if (turnTimer) clearInterval(turnTimer);
+
+            // Preenche a nova seção "A seguir" com os papéis da próxima dupla
+            document.getElementById('summaryNextDescriber').textContent = data.nextDescriber;
+            document.getElementById('summaryNextGuesser').textContent = data.nextGuesser;
+
+            // Mostra o botão para o próximo descritor ou para o anfitrião
+            if (socket.id === data.nextDescriberId || isHost) {
+                confirmNextTurnBtn.classList.remove('hidden');
+            } else {
+                confirmNextTurnBtn.classList.add('hidden');
+            }
+        });
+
+                    socket.on('stageEnded', (data) => {
+                turnView.classList.add('hidden');
+                turnSummaryView.classList.add('hidden');
+                stageSummaryView.classList.remove('hidden');
+    
+                stageSummaryTitle.textContent = `Fim da Etapa ${data.newStage - 1}!`;
+                
+                stageScoreSummary.innerHTML = '';
+                for (const teamName in data.scores) {
+                    const scoreItem = document.createElement('div');
+                    scoreItem.className = 'score-item';
+                    scoreItem.innerHTML = `<span>${teamName}</span><span>${data.scores[teamName]} Pontos</span>`;
+                    stageScoreSummary.appendChild(scoreItem);
+                }
+    
+                if (isHost) {
+                    startNextStageBtn.classList.remove('hidden');
+                    startNextStageBtn.querySelector('span').textContent = `Iniciar Etapa ${data.newStage}`;
+                } else {
+                    startNextStageBtn.classList.add('hidden');
+
+                }
+            });
+    
+
+    });
+    </script>
+</body>
+</html>
