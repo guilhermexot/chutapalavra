@@ -105,8 +105,8 @@ io.on('connection', (socket) => {
 
         socket.on('createRoom', (data) => {
             const nickname = data.nickname ? data.nickname.trim() : '';
-            if (nickname.length < 3) {
-                socket.emit('nicknameError', 'Apelido deve ter no mínimo 3 caracteres.');
+            if (nickname.length < 2) {
+                socket.emit('nicknameError', 'Apelido deve ter no mínimo 2 caracteres.');
                 return;
             }
 
