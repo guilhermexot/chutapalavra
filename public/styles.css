@@ -437,6 +437,14 @@ body {
   font-size: 41px;
   color: var(--color-primary);
   line-height: 1.2;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  text-align: center;
+  padding: 0 32px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .game-buttons-container {

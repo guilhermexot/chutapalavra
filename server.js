@@ -136,8 +136,8 @@ io.on('connection', (socket) => {
         const roomId = data.roomId ? data.roomId.trim() : ''; // Não precisa de toUpperCase() para números
         const nickname = data.nickname ? data.nickname.trim() : '';
 
-        if (nickname.length < 3) {
-            socket.emit('nicknameError', 'Apelido deve ter no mínimo 3 caracteres.');
+        if (nickname.length < 2) {
+            socket.emit('nicknameError', 'Apelido deve ter no mínimo 2 caracteres.');
             return;
         }
 

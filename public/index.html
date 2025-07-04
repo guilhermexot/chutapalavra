@@ -324,13 +324,13 @@
         // --- Lógica dos Botões ---
         createRoomBtn.addEventListener('click', () => {
             clearErrors(); myNickname = createNicknameInput.value.trim();
-            if (myNickname.length < 3) { showError(createNicknameError, 'O nome de jogador deve ter no mínimo 3 caracteres.'); return; }
+            if (myNickname.length < 2) { showError(createNicknameError, 'O nome de jogador deve ter no mínimo 2 caracteres.'); return; }
             socket.emit('createRoom', { nickname: myNickname });
         });
         joinRoomBtn.addEventListener('click', () => {
             clearErrors(); let hasError = false; 
             myNickname = joinNicknameInput.value.trim(); myRoomId = roomIdInput.value.trim().toUpperCase();
-            if (myNickname.length < 3) { showError(joinNicknameError, 'O nome de jogador deve ter no mínimo 3 caracteres.'); hasError = true; }
+            if (myNickname.length < 2) { showError(joinNicknameError, 'O nome de jogador deve ter no mínimo 2 caracteres.'); hasError = true; }
             const idRegex = /^[A-Z]\d{3}$/;
             if (!idRegex.test(myRoomId)) { showError(joinRoomIdError, 'Código da Sala inválido. O formato é 1 letra seguida de 3 números (Ex: A123).'); hasError = true; }
             if (hasError) { return; }
