@@ -388,30 +388,36 @@ socket.on('createTeamsAndStart', (data) => {
 // EM server.js, substitua o listener 'turnEnded' por este:
 
 socket.on('turnEnded', (data) => {
-    const { roomId, timeLeft } = data;
+    const { roomId } = data;
+    console.log(`[Sala ${roomId}] Servidor recebeu o evento 'turnEnded'.`); // LOG 1
+
     const room = rooms[roomId];
 
     if (room && room.teams[room.currentTurn]) {
+        console.log(`[Sala ${roomId}] Condição 'if' VÁLIDA. Processando fim do turno.`); // LOG 2
+        
         const finishedTeam = room.teams[room.currentTurn];
-        // Garante a troca de papéis na dupla para a próxima vez
         if (finishedTeam.ids.length > 1) {
             finishedTeam.currentDescriberIndex = 1 - finishedTeam.currentDescriberIndex;
+            console.log(`[Sala ${roomId}] Papéis da dupla trocados.`); // LOG 3
         }
         
         room.currentTurn++;
+        console.log(`[Sala ${roomId}] Turno incrementado para: ${room.currentTurn}`); // LOG 4
 
         const nextTurnIndex = room.currentTurn % room.teams.length;
         const nextTeam = room.teams[nextTurnIndex];
 
         if (!nextTeam) {
-            console.error(`ERRO CRÍTICO na sala ${roomId}: 'nextTeam' é indefinido após fim de turno.`);
+            console.error(`[SALA ${roomId}] ERRO CRÍTICO: 'nextTeam' é indefinido!`);
             return;
         }
 
         const nextDescriberId = nextTeam.ids[nextTeam.currentDescriberIndex];
         const nextGuesserId = nextTeam.ids.length > 1 ? nextTeam.ids[1 - nextTeam.currentDescriberIndex] : null;
         
-        // Envia os nomes do descritor e do adivinho da próxima dupla
+        console.log(`[Sala ${roomId}] Preparando para emitir 'turnEndedSuccess'. Próxima dupla: ${nextTeam.name}`); // LOG 5
+
         io.to(roomId).emit('turnEndedSuccess', {
             scores: room.scores,
             nextTeamName: nextTeam.name,
@@ -420,6 +426,12 @@ socket.on('turnEnded', (data) => {
             nextDescriberId: nextDescriberId,
             stage: room.currentStage
         });
+
+        console.log(`[Sala ${roomId}] Evento 'turnEndedSuccess' emitido para todos.`); // LOG 6
+
+    } else {
+        console.error(`[SALA ${roomId}] ERRO: Condição 'if (room && room.teams[room.currentTurn])' FALHOU.`);
+        console.error(`> Detalhes: room existe? ${!!room}, room.teams existe? ${!!room.teams}, room.currentTurn: ${room ? room.currentTurn : 'N/A'}`);
     }
 });
 

@@ -147,7 +147,10 @@
             </div>
                         <div id="gameButtonsContainer" class="game-buttons-container">
                 <button id="guessCorrectBtn" class="button-contained-13"><span>Acerto</span></button>
-                <button id="endTurnBtn" class="button-outlined"><span>Encerrar turno</span></button>
+                <div id="endTurnSlider" class="slider-container">
+                    <div class="slider-handle"></div>
+                    <span class="slider-text">Encerrar turno</span>
+                </div>
             </div>
         </div>
 
@@ -221,7 +224,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
+<script>
     document.addEventListener('DOMContentLoaded', () => {
         const socket = io();
         
@@ -268,6 +271,7 @@
         const roomCodeSection = document.getElementById('roomCodeSection');
         const divider1 = document.getElementById('divider1');
         const divider2 = document.getElementById('divider2');
+        const gameButtonsContainer = document.getElementById('gameButtonsContainer');
 
         // --- Seletores da Tela de Jogo ---
         const turnView = document.getElementById('turnView');
@@ -278,12 +282,9 @@
         const currentWordDisplay = document.getElementById('currentWordDisplay');
         const timerDisplay = document.getElementById('timerDisplay');
         const guessCorrectBtn = document.getElementById('guessCorrectBtn');
-        const endTurnBtn = document.getElementById('endTurnBtn');
 
         // --- Seletores da Tela de Resumo ---
         const turnSummaryView = document.getElementById('turnSummaryView');
-        const scoreSummary = document.getElementById('scoreSummary');
-        const nextTeamText = document.getElementById('nextTeamText');
         const confirmNextTurnBtn = document.getElementById('confirmNextTurnBtn');
 
         // --- Seletores da Tela de Resumo de Etapa ---
@@ -292,12 +293,12 @@
         const stageScoreSummary = document.getElementById('stageScoreSummary');
         const startNextStageBtn = document.getElementById('startNextStageBtn');
 
-                    // --- Seletores da Tela de Fim de Jogo ---
-            const gameOverView = document.getElementById('gameOverView');
-            const winnerAnnouncement = document.getElementById('winner-announcement');
-            const finalScoreSummary = document.getElementById('finalScoreSummary');
-            const playAgainBtn = document.getElementById('playAgainBtn');
-            const confettiCanvas = document.getElementById('confetti-canvas');
+        // --- Seletores da Tela de Fim de Jogo ---
+        const gameOverView = document.getElementById('gameOverView');
+        const winnerAnnouncement = document.getElementById('winner-announcement');
+        const finalScoreSummary = document.getElementById('finalScoreSummary');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const confettiCanvas = document.getElementById('confetti-canvas');
 
         // --- Variáveis de Estado ---
         let myNickname = '', myRoomId = '', isHost = false, wordsToSubmit = 5;
@@ -327,6 +328,7 @@
             if (myNickname.length < 2) { showError(createNicknameError, 'O nome de jogador deve ter no mínimo 2 caracteres.'); return; }
             socket.emit('createRoom', { nickname: myNickname });
         });
+
         joinRoomBtn.addEventListener('click', () => {
             clearErrors(); let hasError = false; 
             myNickname = joinNicknameInput.value.trim(); myRoomId = roomIdInput.value.trim().toUpperCase();
@@ -336,26 +338,32 @@
             if (hasError) { return; }
             socket.emit('joinRoom', { nickname: myNickname, roomId: myRoomId });
         });
+
         customAlertCloseBtn.addEventListener('click', () => { customAlert.classList.add('hidden'); });
+
         copyCodeBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(myRoomId).then(() => {
                 copyCodeBtn.querySelector('span').textContent = 'Copiado!';
                 setTimeout(() => { copyCodeBtn.querySelector('span').textContent = 'Copiar código'; }, 2000);
             });
         });
+
         minusBtn.addEventListener('click', () => {
             let count = parseInt(wordCountDisplay.textContent);
             if (count > 1) { count--; wordCountDisplay.textContent = count; }
         });
+
         plusBtn.addEventListener('click', () => {
             let count = parseInt(wordCountDisplay.textContent);
             if (count < 10) { count++; wordCountDisplay.textContent = count; }
         });
+
         setWordsBtn.addEventListener('click', () => {
             wordsToSubmit = parseInt(wordCountDisplay.textContent);
             roomScreen.classList.add('guest-view');
             socket.emit('setWordsPerPlayer', { roomId: myRoomId, wordsPerPlayer: wordsToSubmit });
         });
+
         submitWordBtn.addEventListener('click', () => {
             const word = wordInput.value.trim();
             if (word) {
@@ -363,168 +371,32 @@
                 wordInput.value = ''; wordInput.focus();
             }
         });
-        if(drawTeamsBtn) {
-            drawTeamsBtn.addEventListener('click', () => {
-                drawTeamsBtn.disabled = true; socket.emit('createTeamsAndStart', { roomId: myRoomId });
-            });
-        }
-        if(startGameBtn) {
-            startGameBtn.addEventListener('click', () => {
-                startGameBtn.disabled = true; socket.emit('startGame', { roomId: myRoomId });
-            });
-        }
+
+        drawTeamsBtn.addEventListener('click', () => {
+            drawTeamsBtn.disabled = true; socket.emit('createTeamsAndStart', { roomId: myRoomId });
+        });
+        
+        startGameBtn.addEventListener('click', () => {
+            startGameBtn.disabled = true; socket.emit('startGame', { roomId: myRoomId });
+        });
         
         guessCorrectBtn.addEventListener('click', () => {
             socket.emit('wordGuessed', { roomId: myRoomId, timeLeft: parseInt(timerDisplay.textContent) });
         });
         
-        endTurnBtn.addEventListener('click', () => {
-            if (turnTimer) clearInterval(turnTimer);
-            socket.emit('turnEnded', { roomId: myRoomId });
-        });
-
-                confirmNextTurnBtn.addEventListener('click', () => {
-            // Esconde a tela de resumo ANTES de pedir o próximo turno
+        confirmNextTurnBtn.addEventListener('click', () => {
             turnSummaryView.classList.add('hidden');
-            
-            // Esconde o próprio botão para evitar cliques duplos
             confirmNextTurnBtn.classList.add('hidden');
-            
-            // Pede ao servidor para iniciar o próximo turno
             socket.emit('confirmStartTurn', { roomId: myRoomId });
         });
 
         startNextStageBtn.addEventListener('click', () => {
-                socket.emit('confirmStartTurn', { roomId: myRoomId });
-            });
+            socket.emit('confirmStartTurn', { roomId: myRoomId });
+        });
 
-            playAgainBtn.addEventListener('click', () => {
-                window.location.reload();
-            });
-
-                // EM index.html, no <script>, adicione este listener e as funções de confetes
-
-            // EM index.html, no <script>, substitua o listener 'gameOver' por este:
-
-            socket.on('gameOver', (data) => {
-                // Garante que a tela de jogo correta é exibida
-                showScreen('gameArea');
-                turnView.classList.add('hidden');
-                turnSummaryView.classList.add('hidden');
-                stageSummaryView.classList.add('hidden');
-                gameOverView.classList.remove('hidden');
-
-                let maxScore = -1;
-                let winners = [];
-
-                // Encontra a maior pontuação
-                Object.values(data.scores).forEach(score => {
-                    if (score > maxScore) {
-                        maxScore = score;
-                    }
-                });
-
-                // Encontra todas as equipes com a maior pontuação (para empates)
-                for (const teamName in data.scores) {
-                    if (data.scores[teamName] === maxScore) {
-                        winners.push(teamName);
-                    }
-                }
-
-                // Ordena o placar da maior para a menor pontuação
-                const sortedScores = Object.entries(data.scores).sort(([,a],[,b]) => b-a);
-
-                // Preenche o placar final
-                finalScoreSummary.innerHTML = '';
-                for (const [teamName, score] of sortedScores) {
-                    const scoreItem = document.createElement('div');
-                    scoreItem.className = 'score-item';
-                    if (winners.includes(teamName)) {
-                        scoreItem.classList.add('winner');
-                    }
-                    scoreItem.innerHTML = `<span>${teamName}</span><span>${score} Pontos</span>`;
-                    finalScoreSummary.appendChild(scoreItem);
-                }
-
-                // Anuncia o(s) vencedor(es)
-                if (winners.length > 1) {
-                    winnerAnnouncement.textContent = 'Temos um empate!';
-                } else {
-                    winnerAnnouncement.textContent = `A dupla "${winners[0]}" é a vencedora!`;
-                }
-                
-                // Inicia a animação de confetes
-                startConfetti();
-
-                // --- MODIFICAÇÃO: Para os confetes após 7 segundos ---
-                setTimeout(() => {
-                    if (animationFrameId) {
-                        cancelAnimationFrame(animationFrameId);
-                        // Limpa o canvas para remover os confetes que já estão na tela
-                        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                    }
-                }, 4500); // 5000 milissegundos = 5 segundos
-            });
-
-
-            // --- LÓGICA DOS CONFETES ---
-            const confettiCtx = confettiCanvas.getContext('2d');
-            let confettiParticles = [];
-            let animationFrameId;
-
-            function createParticle(width, height) {
-                return {
-                    x: Math.random() * width,
-                    y: -20 - Math.random() * height,
-                    w: 10,
-                    h: 20,
-                    color: ['#f7d44c', '#f5c423', '#B23BAC', '#7C49CB', '#694ED6', '#FFFFFF'][Math.floor(Math.random() * 6)],
-                    rotation: Math.random() * 360,
-                    speed: Math.random() * 3 + 2,
-                    rotationSpeed: Math.random() * 10 - 5
-                };
-            }
-
-            function startConfetti() {
-                const parent = confettiCanvas.parentElement;
-                if (!parent) return;
-                confettiCanvas.width = parent.offsetWidth;
-                confettiCanvas.height = parent.offsetHeight;
-                
-                confettiParticles = [];
-                const particleCount = 200;
-
-                for (let i = 0; i < particleCount; i++) {
-                    confettiParticles.push(createParticle(confettiCanvas.width, confettiCanvas.height));
-                }
-                
-                if(animationFrameId) cancelAnimationFrame(animationFrameId);
-                animateConfetti();
-            }
-
-            function animateConfetti() {
-                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                
-                confettiParticles.forEach((p, index) => {
-                    p.y += p.speed;
-                    p.rotation += p.rotationSpeed;
-                    
-                    confettiCtx.save();
-                    confettiCtx.translate(p.x + p.w / 2, p.y + p.h / 2);
-                    confettiCtx.rotate(p.rotation * Math.PI / 180);
-                    confettiCtx.fillStyle = p.color;
-                    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-                    confettiCtx.restore();
-
-                    if (p.y > confettiCanvas.height) {
-                        confettiParticles[index] = createParticle(confettiCanvas.width, confettiCanvas.height);
-                        confettiParticles[index].y = -20;
-                    }
-                });
-
-                animationFrameId = requestAnimationFrame(animateConfetti);
-            }
-    
+        playAgainBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
 
         // --- Listeners de Eventos do Servidor ---
         socket.on('roomCreated', (data) => {
@@ -533,20 +405,24 @@
             roomScreen.classList.remove('guest-view');
             waitingForHostSection.classList.add('hidden'); hostSetupSection.classList.remove('hidden');
         });
+
         socket.on('roomJoined', (data) => {
             myNickname = data.nickname; myRoomId = data.roomId; isHost = false;
             showScreen('roomScreen'); roomCodeDisplay.textContent = myRoomId;
             roomScreen.classList.add('guest-view');
             waitingForHostSection.classList.remove('hidden');
         });
+
         socket.on('roomNotFound', () => {
             customAlertTitle.textContent = 'Sala não encontrada';
             customAlertMessage.textContent = 'Não encontramos uma sala com o código informado, por favor verifique.';
             customAlert.classList.remove('hidden');
         });
+
         socket.on('nicknameError', (message) => {
             customAlertTitle.textContent = 'Erro de Apelido'; customAlertMessage.textContent = message; customAlert.classList.remove('hidden');
         });
+
         socket.on('playersUpdate', (players) => {
             playerList.innerHTML = '';
             players.forEach(player => {
@@ -556,12 +432,14 @@
                 playerList.appendChild(playerItem);
             });
         });
+
         socket.on('wordsPerPlayerSet', (data) => {
             wordsToSubmit = data.wordsPerPlayer;
             hostSetupSection.classList.add('hidden'); waitingForHostSection.classList.add('hidden');
             wordSubmissionSection.classList.remove('hidden');
             submitWordBtn.querySelector('span').textContent = `Enviar (1/${wordsToSubmit})`;
         });
+
         socket.on('wordSubmittedIndividual', (data) => {
             wordSubmissionError.classList.remove('visible');
             if (data.wordsSubmittedByMe >= data.totalWordsForPlayer) {
@@ -573,9 +451,11 @@
                 submitWordBtn.querySelector('span').textContent = `Enviar (${nextWordNumber}/${data.totalWordsForPlayer})`;
             }
         });
+
         socket.on('wordSubmissionError', (message) => {
             submissionStatus.classList.add('hidden'); showError(wordSubmissionError, message);
         });
+
         socket.on('allWordsSubmittedAndReady', () => {
             wordSubmissionSection.classList.add('hidden'); wordsSubmittedSection.classList.add('hidden');
             if (isHost) { gamePrepAreaContainer.classList.remove('hidden'); }
@@ -602,14 +482,10 @@
                 teamsList.appendChild(teamItem);
             });
             
-            // --- INÍCIO DA MODIFICAÇÃO ---
             document.getElementById('nextDescriber').textContent = data.nextDescriber;
             document.getElementById('nextGuesser').textContent = data.nextGuesser;
-            // --- FIM DA MODIFICAÇÃO ---
-
             lobbySubtitle.textContent = 'Duplas sorteadas! Preparem-se para o início do jogo.';
             
-            // Oculta o botão por defeito, ele será mostrado pelo evento turnEndedSuccess ou prepareNextStage
             if (isHost) { 
                 startGameBtn.classList.remove('hidden'); 
             } else { 
@@ -618,38 +494,30 @@
         });
 
         socket.on('startTurn', (data) => {
-            // 1. Garante que apenas a área de jogo principal está visível
+            resetSlider(); 
             showScreen('gameArea');
-            // 2. Esconde explicitamente todas as "sub-telas" dentro da área de jogo
             turnSummaryView.classList.add('hidden');
             stageSummaryView.classList.add('hidden');
-            // 3. Mostra APENAS a tela do turno atual
+            gameOverView.classList.add('hidden');
             turnView.classList.remove('hidden');
 
-            // Limpa qualquer temporizador anterior
             if (turnTimer) clearInterval(turnTimer);
 
-            // Preenche os títulos e subtítulos
             const stageTitles = { 1: 'Etapa 1: Descrição', 2: 'Etapa 2: Uma Palavra', 3: 'Etapa 3: Mímica' };
             const stageSubtitles = { 1: 'Descreva a palavra sorteada para sua dupla.', 2: 'Diga apenas UMA palavra como dica.', 3: 'Faça mímicas para sua dupla adivinhar.' };
             gameStageTitle.textContent = stageTitles[data.stage] || `Etapa ${data.stage}`;
             gameStageSubtitle.textContent = stageSubtitles[data.stage] || 'Adivinhe a palavra!';
 
-            // Preenche os nomes e a palavra
             describerName.textContent = data.describer; 
             guesserName.textContent = data.guesser;
             currentWordDisplay.textContent = data.currentWord;
             
-            // --- CORREÇÃO DA VISIBILIDADE DOS BOTÕES ---
-            const gameButtons = document.getElementById('gameButtonsContainer');
-            // O anfitrião OU o descritor da vez podem ver e usar os botões de jogo
             if (isHost || socket.id === data.describerId) {
-                gameButtons.classList.remove('hidden');
+                gameButtonsContainer.classList.remove('hidden');
             } else {
-                gameButtons.classList.add('hidden');
+                gameButtonsContainer.classList.add('hidden');
             }
             
-            // Inicia o temporizador
             let timeLeft = data.turnDuration;
             timerDisplay.textContent = `${timeLeft}s`;
             turnTimer = setInterval(() => {
@@ -657,13 +525,12 @@
                 timerDisplay.textContent = `${timeLeft}s`;
                 if (timeLeft <= 0) {
                     clearInterval(turnTimer);
-                    // Apenas o descritor pode encerrar o turno automaticamente
-                    if (socket.id === data.describerId) endTurnBtn.click();
+                    if (isHost || socket.id === data.describerId) {
+                        socket.emit('turnEnded', { roomId: myRoomId });
+                    }
                 }
             }, 1000);
         });
-
-
 
         socket.on('wordGuessedSuccess', (data) => {
             if (data.canGuessMore) {
@@ -676,11 +543,9 @@
             turnSummaryView.classList.remove('hidden');
             if (turnTimer) clearInterval(turnTimer);
 
-            // Preenche a nova seção "A seguir" com os papéis da próxima dupla
             document.getElementById('summaryNextDescriber').textContent = data.nextDescriber;
             document.getElementById('summaryNextGuesser').textContent = data.nextGuesser;
 
-            // Mostra o botão para o próximo descritor ou para o anfitrião
             if (socket.id === data.nextDescriberId || isHost) {
                 confirmNextTurnBtn.classList.remove('hidden');
             } else {
@@ -688,32 +553,192 @@
             }
         });
 
-                    socket.on('stageEnded', (data) => {
-                turnView.classList.add('hidden');
-                turnSummaryView.classList.add('hidden');
-                stageSummaryView.classList.remove('hidden');
-    
-                stageSummaryTitle.textContent = `Fim da Etapa ${data.newStage - 1}!`;
-                
-                stageScoreSummary.innerHTML = '';
-                for (const teamName in data.scores) {
-                    const scoreItem = document.createElement('div');
-                    scoreItem.className = 'score-item';
-                    scoreItem.innerHTML = `<span>${teamName}</span><span>${data.scores[teamName]} Pontos</span>`;
-                    stageScoreSummary.appendChild(scoreItem);
-                }
-    
-                if (isHost) {
-                    startNextStageBtn.classList.remove('hidden');
-                    startNextStageBtn.querySelector('span').textContent = `Iniciar Etapa ${data.newStage}`;
-                } else {
-                    startNextStageBtn.classList.add('hidden');
+        socket.on('stageEnded', (data) => {
+            turnView.classList.add('hidden');
+            turnSummaryView.classList.add('hidden');
+            stageSummaryView.classList.remove('hidden');
 
+            stageSummaryTitle.textContent = `Fim da Etapa ${data.newStage - 1}!`;
+            
+            stageScoreSummary.innerHTML = '';
+            for (const teamName in data.scores) {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+                scoreItem.innerHTML = `<span>${teamName}</span><span>${data.scores[teamName]} Pontos</span>`;
+                stageScoreSummary.appendChild(scoreItem);
+            }
+
+            if (isHost) {
+                startNextStageBtn.classList.remove('hidden');
+                startNextStageBtn.querySelector('span').textContent = `Iniciar Etapa ${data.newStage}`;
+            } else {
+                startNextStageBtn.classList.add('hidden');
+            }
+        });
+        
+        socket.on('gameOver', (data) => {
+            showScreen('gameArea');
+            turnView.classList.add('hidden');
+            turnSummaryView.classList.add('hidden');
+            stageSummaryView.classList.add('hidden');
+            gameOverView.classList.remove('hidden');
+
+            let maxScore = -1;
+            let winners = [];
+
+            Object.values(data.scores).forEach(score => {
+                if (score > maxScore) { maxScore = score; }
+            });
+
+            for (const teamName in data.scores) {
+                if (data.scores[teamName] === maxScore) {
+                    winners.push(teamName);
+                }
+            }
+
+            const sortedScores = Object.entries(data.scores).sort(([,a],[,b]) => b-a);
+            finalScoreSummary.innerHTML = '';
+            for (const [teamName, score] of sortedScores) {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+                if (winners.includes(teamName)) { scoreItem.classList.add('winner'); }
+                scoreItem.innerHTML = `<span>${teamName}</span><span>${score} Pontos</span>`;
+                finalScoreSummary.appendChild(scoreItem);
+            }
+
+            if (winners.length > 1) {
+                winnerAnnouncement.textContent = 'Temos um empate!';
+            } else {
+                winnerAnnouncement.textContent = `A dupla "${winners[0]}" é a vencedora!`;
+            }
+            
+            startConfetti();
+            setTimeout(() => {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                }
+            }, 4500);
+        });
+
+        // --- LÓGICA DO SLIDER PARA ENCERRAR TURNO ---
+        const endTurnSlider = document.getElementById('endTurnSlider');
+        const sliderHandle = endTurnSlider.querySelector('.slider-handle');
+
+        let isSliding = false;
+        let startX = 0;
+
+        function resetSlider() {
+            if (!endTurnSlider) return;
+            endTurnSlider.classList.remove('unlocked');
+            sliderHandle.style.transition = 'left 0.3s ease';
+            sliderHandle.style.left = '2px';
+            setTimeout(() => {
+                if (sliderHandle) sliderHandle.style.transition = 'none';
+            }, 300);
+        }
+
+        function startSlide(e) {
+            e.preventDefault(); 
+            isSliding = true;
+            endTurnSlider.classList.add('sliding');
+            sliderHandle.style.transition = 'none'; 
+            startX = (e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX) - sliderHandle.offsetLeft;
+        }
+
+        function moveSlide(e) {
+            if (!isSliding) return;
+            e.preventDefault();
+            const currentX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            let newLeft = currentX - startX;
+            const minLeft = 2;
+            const maxLeft = endTurnSlider.offsetWidth - sliderHandle.offsetWidth - 6;
+            if (newLeft < minLeft) newLeft = minLeft;
+            if (newLeft > maxLeft) newLeft = maxLeft;
+            sliderHandle.style.left = `${newLeft}px`;
+        }
+
+        function endSlide(e) {
+            if (!isSliding) return;
+            isSliding = false;
+            endTurnSlider.classList.remove('sliding');
+            const maxLeft = endTurnSlider.offsetWidth - sliderHandle.offsetWidth - 6;
+
+            if (sliderHandle.offsetLeft >= maxLeft - 5) {
+                endTurnSlider.classList.add('unlocked');
+                if (turnTimer) {
+                    clearInterval(turnTimer);
+                }
+                socket.emit('turnEnded', { roomId: myRoomId });
+            } else {
+                resetSlider();
+            }
+        }
+        
+        sliderHandle.addEventListener('mousedown', startSlide);
+        document.addEventListener('mousemove', moveSlide);
+        document.addEventListener('mouseup', endSlide);
+        sliderHandle.addEventListener('touchstart', startSlide, { passive: false });
+        document.addEventListener('touchmove', moveSlide, { passive: false });
+        document.addEventListener('touchend', endSlide);
+                
+        // --- LÓGICA DOS CONFETES ---
+        const confettiCtx = confettiCanvas.getContext('2d');
+        let confettiParticles = [];
+        let animationFrameId;
+
+        function createParticle(width, height) {
+            return {
+                x: Math.random() * width,
+                y: -20 - Math.random() * height,
+                w: 10, h: 20,
+                color: ['#f7d44c', '#f5c423', '#B23BAC', '#7C49CB', '#694ED6', '#FFFFFF'][Math.floor(Math.random() * 6)],
+                rotation: Math.random() * 360,
+                speed: Math.random() * 3 + 2,
+                rotationSpeed: Math.random() * 10 - 5
+            };
+        }
+
+        function startConfetti() {
+            const parent = confettiCanvas.parentElement;
+            if (!parent) return;
+            confettiCanvas.width = parent.offsetWidth;
+            confettiCanvas.height = parent.offsetHeight;
+            
+            confettiParticles = [];
+            const particleCount = 200;
+
+            for (let i = 0; i < particleCount; i++) {
+                confettiParticles.push(createParticle(confettiCanvas.width, confettiCanvas.height));
+            }
+            
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            
+            confettiParticles.forEach((p, index) => {
+                p.y += p.speed;
+                p.rotation += p.rotationSpeed;
+                
+                confettiCtx.save();
+                confettiCtx.translate(p.x + p.w / 2, p.y + p.h / 2);
+                confettiCtx.rotate(p.rotation * Math.PI / 180);
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                confettiCtx.restore();
+
+                if (p.y > confettiCanvas.height) {
+                    confettiParticles[index] = createParticle(confettiCanvas.width, confettiCanvas.height);
+                    confettiParticles[index].y = -20;
                 }
             });
-    
 
+            animationFrameId = requestAnimationFrame(animateConfetti);
+        }
     });
-    </script>
+</script>
 </body>
 </html>

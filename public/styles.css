@@ -510,3 +510,74 @@ body {
     z-index: 10;
     pointer-events: none; /* Para não interferir com os botões */
 }
+
+
+/* --- ESTILOS DO SLIDER PARA ENCERRAR TURNO (CORRIGIDO) --- */
+.slider-container {
+  position: relative;
+  width: 100%;
+  height: 44px; /* Altura similar aos botões */
+  background-color: white;
+  border-radius: 999px;
+  border: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: default; /* O cursor de "agarrar" fica só na alça */
+  -webkit-user-select: none; /* Previne seleção de texto */
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.slider-handle {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  background: var(--gradient-button); /* Apenas o gradiente aqui */
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 2;
+  transition: left 0.3s ease;
+  /* Usamos flexbox para centralizar perfeitamente o nosso pseudo-elemento (a seta) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.slider-handle::before {
+  content: ''; /* Pseudo-elementos precisam da propriedade 'content' */
+  display: block;
+  width: 70%; /* A "caixa" da seta terá 55% da largura do círculo */
+  height: 70%; /* E 55% da altura */
+  background-image: url('images/arrow-right.svg');
+  background-size: contain; /* Garante que a imagem caiba perfeitamente na caixa, sem cortar */
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.slider-container.sliding .slider-handle {
+    cursor: grabbing;
+    transition: none; /* Remove a transição durante o arrasto */
+}
+
+.slider-text {
+  font-family: var(--font-roboto);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text-light);
+  z-index: 1;
+}
+
+.slider-container.unlocked {
+    background: var(--gradient-button); /* Preenche o fundo ao completar */
+}
+
+.slider-container.unlocked .slider-text {
+    display: none; /* Esconde o texto ao completar */
+}
+
