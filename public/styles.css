@@ -581,3 +581,13 @@ body {
     display: none; /* Esconde o texto ao completar */
 }
 
+/* --- ESTILOS DO SLIDER DESABILITADO --- */
+.slider-container.disabled {
+  border-color: #919191; /* Contorno cinza */
+  cursor: not-allowed; /* Ícone de "não permitido" */
+}
+
+.slider-container.disabled .slider-handle {
+  background: #919191; /* Bola cinza */
+  cursor: not-allowed;
+}

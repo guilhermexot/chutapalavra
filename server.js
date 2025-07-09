@@ -83,7 +83,8 @@ function shuffleArray(array) {
             describer: describerPlayer, 
             guesser: guesserPlayer, 
             turnDuration: turnDuration, 
-            describerId: describerId 
+            describerId: describerId,
+            isLastWord: room.words.length - room.currentWordIndex === 1 // Adiciona a flag se for a última palavra
         };
         
         for (const playerId in room.players) {
@@ -432,6 +433,41 @@ socket.on('turnEnded', (data) => {
     } else {
         console.error(`[SALA ${roomId}] ERRO: Condição 'if (room && room.teams[room.currentTurn])' FALHOU.`);
         console.error(`> Detalhes: room existe? ${!!room}, room.teams existe? ${!!room.teams}, room.currentTurn: ${room ? room.currentTurn : 'N/A'}`);
+    }
+});
+
+socket.on('skipWord', (data) => {
+    const { roomId } = data;
+    const room = rooms[roomId];
+
+    // Verifica se a sala e o jogador existem
+    if (room && room.players[socket.id]) {
+        // Pega a palavra atual, remove do meio e a coloca no final do array
+        const skippedWord = room.words.splice(room.currentWordIndex, 1)[0];
+        room.words.push(skippedWord);
+
+        console.log(`[Sala ${roomId}] Palavra "${skippedWord}" pulada e movida para o final do baralho.`);
+
+        // A "nova" palavra atual é a que estava na posição seguinte
+        const nextWord = room.words[room.currentWordIndex];
+        const currentTeam = room.teams[room.currentTurn];
+        const describerId = currentTeam.ids[currentTeam.currentDescriberIndex];
+        const hostId = room.hostId;
+        
+        // Verifica se a "nova" palavra atual agora é a última do turno
+        const isLastWord = room.words.length - room.currentWordIndex === 1;
+
+        // Envia a atualização para todos na sala
+        for (const playerId in room.players) {
+            const playerSocket = io.sockets.sockets.get(playerId);
+            if (playerSocket) {
+                if (playerId === describerId || playerId === hostId) {
+                    playerSocket.emit('wordSkippedSuccess', { nextWord: nextWord, isLastWord: isLastWord });
+                } else {
+                    playerSocket.emit('wordSkippedSuccess', { nextWord: '******', isLastWord: isLastWord });
+                }
+            }
+        }
     }
 });
 

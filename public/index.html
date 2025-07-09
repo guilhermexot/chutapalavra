@@ -149,7 +149,7 @@
                 <button id="guessCorrectBtn" class="button-contained-13"><span>Acerto</span></button>
                 <div id="endTurnSlider" class="slider-container">
                     <div class="slider-handle"></div>
-                    <span class="slider-text">Encerrar turno</span>
+                    <span class="slider-text">Pular (-12 seg)</span>
                 </div>
             </div>
         </div>
@@ -303,6 +303,7 @@
         // --- Variáveis de Estado ---
         let myNickname = '', myRoomId = '', isHost = false, wordsToSubmit = 5;
         let turnTimer = null;
+        let currentDescriberId = null;
 
         // --- Funções Auxiliares ---
         function showScreen(screenId) {
@@ -320,6 +321,38 @@
             joinNicknameError.classList.remove('visible');
             joinRoomIdError.classList.remove('visible');
             wordSubmissionError.classList.remove('visible');
+        }
+
+        function startOrUpdateTimer(duration, isLastWord) {
+            if (turnTimer) clearInterval(turnTimer); // Limpa qualquer timer anterior
+
+            let timeLeft = duration;
+
+            const updateTimer = () => {
+                // Atualiza o display do tempo
+                timerDisplay.textContent = `${timeLeft}s`;
+
+                // Habilita ou desabilita o slider com base nas duas condições
+                if (timeLeft <= 12 || isLastWord) {
+                    endTurnSlider.classList.add('disabled');
+                } else {
+                    endTurnSlider.classList.remove('disabled');
+                }
+
+                // Verifica o fim do tempo
+                if (timeLeft < 0) {
+                    clearInterval(turnTimer);
+                    if (isHost || socket.id === currentDescriberId) {
+                        socket.emit('turnEnded', { roomId: myRoomId });
+                    }
+                    return; // Para a execução
+                }
+
+                timeLeft--;
+            };
+            
+            updateTimer(); // Executa uma vez imediatamente para atualizar a UI
+            turnTimer = setInterval(updateTimer, 1000);
         }
 
         // --- Lógica dos Botões ---
@@ -501,7 +534,7 @@
             gameOverView.classList.add('hidden');
             turnView.classList.remove('hidden');
 
-            if (turnTimer) clearInterval(turnTimer);
+            currentDescriberId = data.describerId; // Guarda o ID do descritor atual
 
             const stageTitles = { 1: 'Etapa 1: Descrição', 2: 'Etapa 2: Uma Palavra', 3: 'Etapa 3: Mímica' };
             const stageSubtitles = { 1: 'Descreva a palavra sorteada para sua dupla.', 2: 'Diga apenas UMA palavra como dica.', 3: 'Faça mímicas para sua dupla adivinhar.' };
@@ -518,24 +551,21 @@
                 gameButtonsContainer.classList.add('hidden');
             }
             
-            let timeLeft = data.turnDuration;
-            timerDisplay.textContent = `${timeLeft}s`;
-            turnTimer = setInterval(() => {
-                timeLeft--;
-                timerDisplay.textContent = `${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    clearInterval(turnTimer);
-                    if (isHost || socket.id === data.describerId) {
-                        socket.emit('turnEnded', { roomId: myRoomId });
-                    }
-                }
-            }, 1000);
+            // Inicia o timer com os dados recebidos do servidor
+            startOrUpdateTimer(data.turnDuration, data.isLastWord);
         });
 
         socket.on('wordGuessedSuccess', (data) => {
             if (data.canGuessMore) {
                 currentWordDisplay.textContent = data.nextWord;
             }
+        });
+
+        socket.on('wordSkippedSuccess', (data) => {
+            currentWordDisplay.textContent = data.nextWord;
+            const currentTime = parseInt(timerDisplay.textContent);
+            // Reinicia o timer com a penalidade e a nova flag 'isLastWord'
+            startOrUpdateTimer(currentTime - 12, data.isLastWord);
         });
 
         socket.on('turnEndedSuccess', (data) => {
@@ -659,20 +689,26 @@
         }
 
         function endSlide(e) {
-            if (!isSliding) return;
+            // Impede a ação se estiver desabilitado ou se não estiver deslizando
+            if (!isSliding || endTurnSlider.classList.contains('disabled')) {
+                // Se não estiver deslizando, não faz nada. Se estiver desabilitado, reseta a posição.
+                if (isSliding) resetSlider();
+                isSliding = false;
+                return;
+            }
+
             isSliding = false;
             endTurnSlider.classList.remove('sliding');
             const maxLeft = endTurnSlider.offsetWidth - sliderHandle.offsetWidth - 6;
 
             if (sliderHandle.offsetLeft >= maxLeft - 5) {
-                endTurnSlider.classList.add('unlocked');
-                if (turnTimer) {
-                    clearInterval(turnTimer);
-                }
-                socket.emit('turnEnded', { roomId: myRoomId });
-            } else {
-                resetSlider();
+                // Ação de pular confirmada: envia o comando para o servidor
+                socket.emit('skipWord', { roomId: myRoomId });
+                // O timer será atualizado quando receber a resposta do servidor
             }
+            
+            // Sempre reseta a posição do slider após o uso (seja completo ou não)
+            resetSlider();
         }
         
         sliderHandle.addEventListener('mousedown', startSlide);
